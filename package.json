@@ -1,0 +1,23 @@
+{
+  "name": "scrambl",
+  "version": "1.0.0",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node --env-file=.env --loader ./load.mjs ./dist/index.js",
+    "watch": "tsc --watch --project tsconfig.json",
+    "serve": "nodemon --env-file=.env --loader ./load.mjs ./dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "nodemon": "^3.0.0",
+    "typescript": "^5.9.3"
+  },
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.24.2",
+    "strife.js": "^4.4.0"
+  }
+}
