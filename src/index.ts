@@ -1,6 +1,7 @@
-import { ActivityType, GatewayIntentBits } from "discord.js";
+import { ActivityType, GatewayIntentBits, MessageFlags } from "discord.js";
 import login, { client } from "strife.js";
 import { fileURLToPath } from "url";
+import { InvalidCommandUsageError } from "./util/errors.js";
 
 function toBitmap(a: number[]): number;
 function toBitmap(a: number, b: number): number;
@@ -11,8 +12,16 @@ function toBitmap(a: number | number[], b?: number): number {
   return a | (b ?? 0);
 }
 await login({
-  handleError: (err) => {
+  handleError: (err, i) => {
     console.error("❌ An error occurred:", err);
+    if (err instanceof InvalidCommandUsageError) {
+      if (!(typeof i === "string")) {
+        return void i.reply({
+          content: `Invalid command usage: ${err.message}`,
+          flags: MessageFlags.Ephemeral,
+        });
+      } else console.error("An error occurred:", err);
+    }
   },
   clientOptions: {
     intents: toBitmap([

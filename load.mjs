@@ -3,6 +3,8 @@ import { resolve as nodeResolve, dirname } from "node:path";
 import fs from "node:fs/promises";
 import { readFileSync } from "node:fs";
 
+const distDir = nodeResolve(process.cwd(), "dist");
+
 let aliasMap = [];
 try {
     const tsconfig = JSON.parse(readFileSync("./tsconfig.json", "utf8"));
@@ -30,9 +32,9 @@ export async function resolve(specifier, context, nextResolve) {
                     ".js",
                     ".mjs",
                     ".cjs",
-                    ".ts",
+                    // ".ts",
                     "/index.js",
-                    "/index.ts",
+                    // "/index.ts",
                 ]) {
                     const candidate = abs + ext;
                     try {
@@ -43,10 +45,32 @@ export async function resolve(specifier, context, nextResolve) {
             }
         }
 
+        // relative specifiers like "./foo"
         if (specifier.startsWith(".")) {
             const base = dirname(fileURLToPath(context.parentURL));
             const tryPath = nodeResolve(base, specifier);
             for (const ext of [
+                ".js",
+                ".mjs",
+                ".cjs",
+                ".ts",
+                "/index.js",
+                "/index.mjs",
+                "/index.cjs",
+                "/index.ts",
+            ]) {
+                const candidate = tryPath + ext;
+                try {
+                    await fs.access(candidate);
+                    return nextResolve(pathToFileURL(candidate).href, context);
+                } catch { }
+            }
+        }
+
+        if (!specifier.startsWith(".") && !specifier.startsWith("/") && specifier.includes("/")) {
+            const tryPath = nodeResolve(distDir, specifier);
+            for (const ext of [
+                "",
                 ".js",
                 ".mjs",
                 ".cjs",

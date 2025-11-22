@@ -43,7 +43,7 @@ function scrambleSegment(word: string): string {
   return chars.join("");
 }
 
-function levenshteinDistance(a: string, b: string): number {
+export function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
 
   for (let i = 0; i <= b.length; i++) {
