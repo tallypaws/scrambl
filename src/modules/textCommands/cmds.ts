@@ -16,7 +16,9 @@ const specialIds: Record<string, number> = {
 };
 
 function seededRandom(min: number, max: number, seed: string): number {
-  if (specialIds[seed]) return specialIds[seed];
+  if (specialIds[seed] !== undefined) {
+    return specialIds[seed];
+  }
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     const char = seed.charCodeAt(i);
@@ -489,7 +491,6 @@ export const commands: CommandDef[] = [
         "All systems operational!",
         "May I take your order?",
         "Wow! I exist!",
-        "I'm online! rubrubrubrubrub",
         "Well Seymour, I made it!",
         "Po-- just kidding, I prefer the term 'Table Tennis'",
         "who dis",
@@ -599,7 +600,6 @@ export const commands: CommandDef[] = [
         "Try complaining, that usually lowers the ping",
         'What do you mean <SECS> second ping isn\'t "as advertised"??',
         "It's snail time",
-        "hey craig did you fix the high ping issue yet",
         "i'm a bot who loves to snooze",
       ];
 
@@ -612,6 +612,7 @@ export const commands: CommandDef[] = [
       const array = isSlow ? slow : normal;
       let updateMessage = array[Math.floor(Math.random() * array.length)];
       const extra = latency;
+
       updateMessage = updateMessage
         .replace(/<AUTHOR>/g, ctx.message.author.toString())
         .replace(/<Username>/g, ctx.message.author.username)

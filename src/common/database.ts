@@ -32,6 +32,8 @@ async function connectSurrealDB({
   username: string;
   password: string;
 }) {
+  console.log("[Surreal] connecting " + url);
+
   await surrealDb.connect(url, {
     namespace: namespace,
     database: database,
@@ -146,7 +148,9 @@ export class DBMap<T extends z.ZodTypeAny, D = z.infer<T> | null> {
     defaultV: D extends null ? D : z.infer<T>;
   }): Promise<DBMap<T, D>> {
     const instance = new this(options.name, options.schema, options.defaultV);
-    await getSurrealDB().query(`DEFINE TABLE IF NOT EXISTS ${instance.name} SCHEMALESS;`);
+    await getSurrealDB().query(
+      `DEFINE TABLE IF NOT EXISTS ${instance.name} SCHEMALESS;`,
+    );
     return instance;
   }
 
