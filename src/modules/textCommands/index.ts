@@ -1,7 +1,9 @@
 import { Message, MessageFlags } from "discord.js";
-import { commands } from "./cmds";
-import { defineEvent } from "strife.js";
-import { InvalidCommandUsageError } from "util/errors";
+import { commands } from "./cmds.js";
+import { client, defineEvent } from "strife.js";
+import { InvalidCommandUsageError } from "../../util/errors.js";
+import { DBMap } from "../../common/database.js";
+import z from "zod";
 
 export interface CommandContext {
   message: Message;
@@ -14,7 +16,13 @@ export interface CommandDef {
   run(ctx: CommandContext): Promise<any>;
 }
 
-const PREFIX = ".";
+const DefaultPrefix = "s.";
+
+export const guildPrefixMap = await DBMap.create({
+  name: "fmusermap",
+  schema: z.string(),
+  defaultV: DefaultPrefix,
+});
 
 const commandMap = new Map<string, CommandDef>();
 
@@ -31,9 +39,20 @@ defineEvent("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   const raw = message.content.trim();
-  if (!raw.startsWith(PREFIX)) return;
+  const prefix = message.guild
+    ? await guildPrefixMap.get(message.guild.id)
+    : DefaultPrefix;
 
-  const withoutPrefix = raw.slice(PREFIX.length);
+  if (!(raw.startsWith(prefix) || raw.startsWith(`<@${client.user.id}>`)))
+    return;
+
+  let withoutPrefix: string;
+  if (raw.startsWith(`<@${client.user.id}>`)) {
+    withoutPrefix = raw.slice(`<@${client.user.id}>`.length);
+  } else {
+    withoutPrefix = raw.slice(prefix.length);
+  }
+  withoutPrefix = withoutPrefix.trimStart();
   const parts = withoutPrefix.split(/\s+/);
   const cmdName = parts.shift()?.toLowerCase();
   const args = parts;

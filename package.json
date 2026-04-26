@@ -1,6 +1,6 @@
 {
   "name": "scrambl",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "",
   "license": "ISC",
   "description": "",
@@ -20,7 +20,9 @@
     "discord.js": "^14.24.2",
     "sharp": "^0.34.5",
     "strife.js": "^4.4.0",
-    "surrealdb": "^1.3.2",
+    "surrealdb": "^2.0.3",
+    "@surrealdb/node": "^3.0.3",
+    "ws": "^8.20.0",
     "zod": "^4.1.12"
   }
 }

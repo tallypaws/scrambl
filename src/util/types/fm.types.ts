@@ -1,4 +1,4 @@
-type FmTopAlbums = {
+export type FmTopAlbums = {
   topalbums: {
     album: Array<{
       name: string;
@@ -26,7 +26,7 @@ type FmTopAlbums = {
   };
 };
 
-type FmTopArtists = {
+export type FmTopArtists = {
   topartists: {
     artist: Array<{
       name: string;
@@ -54,7 +54,7 @@ type FmTopArtists = {
   };
 };
 
-type FmTopTracks = {
+export type FmTopTracks = {
   toptracks: {
     track: Array<{
       name: string;
@@ -75,7 +75,7 @@ type FmTopTracks = {
   };
 };
 
-type FmTrackInfo = {
+export type FmTrackInfo = {
   track: {
     name: string;
     url?: string;
@@ -117,7 +117,7 @@ type FmTrackInfo = {
   };
 };
 
-type FmTrackTags = {
+export type FmTrackTags = {
   toptags: {
     tag: Array<{
       count: number;
@@ -130,7 +130,7 @@ type FmTrackTags = {
   };
 };
 
-type FmAlbumInfo = {
+export type FmAlbumInfo = {
   album: {
     artist?: string;
     mbid?: string;
@@ -172,7 +172,7 @@ type FmAlbumInfo = {
   };
 };
 
-type FmAlbumTags = {
+export type FmAlbumTags = {
   toptags: {
     tag: Array<{
       count: number;
@@ -185,7 +185,7 @@ type FmAlbumTags = {
   };
 };
 
-type FmArtistInfo = {
+export type FmArtistInfo = {
   artist: {
     name: string;
     mbid?: string;
@@ -236,7 +236,7 @@ type FmArtistInfo = {
   };
 };
 
-type FmArtistTags = {
+export type FmArtistTags = {
   toptags: {
     tag: Array<{
       count: number;

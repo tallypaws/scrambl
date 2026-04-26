@@ -1,6 +1,5 @@
-import { musicbrainz } from "util/musicbrainz";
-import { fm } from "../util/fm";
-
+import { musicbrainz } from "../util/musicbrainz.js";
+import { fm } from "../util/fm.js";
 
 //write json files for every method
 
@@ -14,8 +13,7 @@ async function writeJsonFiles() {
     .topArtists("thetallykjhaslkdjfhalsj")
     .catch((e) => {
       if (e instanceof Response) {
-        
-        return {status: e.status}
+        return { status: e.status };
       }
     });
   writeFileSync("topArtists.json", JSON.stringify(topArtists, null, 2));
@@ -42,11 +40,11 @@ async function writeJsonFiles() {
   writeFileSync("artistTags.json", JSON.stringify(artistTags, null, 2));
 
   const musicbrainzArtistInfo = await musicbrainz.artist.info(
-    "eb3c021d-e056-42d6-8fad-064205a90527"
+    "eb3c021d-e056-42d6-8fad-064205a90527",
   );
   writeFileSync(
     "musicbrainzArtistInfo.json",
-    JSON.stringify(musicbrainzArtistInfo, null, 2)
+    JSON.stringify(musicbrainzArtistInfo, null, 2),
   );
 }
 

@@ -4,7 +4,7 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
-import { userMap } from "modules/link";
+import { userMap } from "./link.js";
 import {
   games,
   channelIdtoGameId,
@@ -17,11 +17,11 @@ import {
   getRandomItem,
   GameType,
   canStartGameInChannel,
-} from "modules/gameShared";
+} from "./gameShared.js";
 import { defineChatCommand, defineEvent } from "strife.js";
-import { InvalidCommandUsageError } from "util/errors.js";
-import { levenshteinDistance, scramble } from "util/text";
-import { colors } from "common/constants";
+import { InvalidCommandUsageError } from "../util/errors.js";
+import { levenshteinDistance, scramble } from "../util/text.js";
+import { colors } from "../common/constants.js";
 
 defineChatCommand(
   {
@@ -51,7 +51,7 @@ defineChatCommand(
     if (!channel.isSendable()) {
       // return interaction.reply({ content: "Cannot send messages in this channel.", flags: MessageFlags.Ephemeral });
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -73,9 +73,9 @@ defineChatCommand(
       },
 
       interaction.user.id,
-      type
+      type,
     );
-  }
+  },
 );
 
 defineEvent("messageCreate", async (message) => {
@@ -86,7 +86,7 @@ defineEvent("messageCreate", async (message) => {
 
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -101,7 +101,7 @@ defineEvent("messageCreate", async (message) => {
         return msg;
       },
       message.author.id,
-      "artist"
+      "artist",
     );
   }
 });
@@ -115,19 +115,19 @@ export async function startJumble(
   channel: TextBasedChannel,
   sendMessage: (payload: payload) => Promise<Message<boolean>>,
   user: string,
-  type: GameType
+  type: GameType,
 ) {
   try {
     console.time("startJumble");
     if (channelIdtoGameId[channel.id]) {
       throw new InvalidCommandUsageError(
-        "A jumble game is already in this channel."
+        "A jumble game is already in this channel.",
       );
     }
     channelIdtoGameId[channel.id] = "-";
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -137,7 +137,7 @@ export async function startJumble(
     const fmuser = await userMap.get(user);
     if (!fmuser) {
       throw new InvalidCommandUsageError(
-        "You need to link your Last.fm account first using /link."
+        "You need to link your Last.fm account first using /link.",
       );
     }
     const realType =
@@ -175,7 +175,7 @@ export async function startJumble(
           hints = await getAlbumHints(
             randomItem.artist.name,
             randomItem.name,
-            +randomItem.playcount
+            +randomItem.playcount,
           );
 
           answer = randomItem.name;
@@ -197,7 +197,7 @@ export async function startJumble(
           hints = await getTrackHints(
             randomItem.artist.name,
             randomItem.name,
-            +randomItem.playcount
+            +randomItem.playcount,
           );
 
           answer = randomItem.name;
@@ -208,7 +208,7 @@ export async function startJumble(
 
     let jumbled = scramble(answer).toUpperCase();
     const gameId = `jumble-${Date.now().toString()}-${Math.floor(
-      Math.random() * 1000
+      Math.random() * 1000,
     )}`;
 
     const components = buildJumbleComponents(
@@ -217,7 +217,7 @@ export async function startJumble(
       hints,
       gameId,
       "Type your answer within 35 seconds to make a guess",
-      colors.game[realType]
+      colors.game[realType],
     );
     const message = await sendMessage({
       components,
@@ -251,13 +251,13 @@ export async function startJumble(
             game.hints,
             null,
             `**Time's up!**\nIt was **${game.answer}**.`,
-            game.color
+            game.color,
           ),
         }),
         await game.message.reply({
           components: buildJumbleTimeUpReplyComponents(
             game.answer,
-            game.mix ? "mix" : game.type
+            game.mix ? "mix" : game.type,
           ),
           flags: MessageFlags.IsComponentsV2,
         }),
@@ -279,7 +279,7 @@ function buildJumbleComponents(
   hints: { random: string[]; all: string[] },
   gameId: string | null,
   suffix?: string,
-  color?: number
+  color?: number,
 ) {
   return [
     {
@@ -343,7 +343,7 @@ function buildJumbleGiveUpComponents(
   hints: { random: string[]; all: string[] },
   suffix?: string,
   buttonLabel?: string,
-  mix: boolean = false
+  mix: boolean = false,
 ) {
   return [
     {
@@ -390,7 +390,7 @@ function buildJumbleAnswerComponents(
   timeMs: number,
   userId: string,
   gameType: GameType,
-  by?: string
+  by?: string,
 ) {
   return [
     {
@@ -455,7 +455,7 @@ function buildPlayAgainEditComponentsJumble(
   buttonMessage: any,
   label: string,
   type = "artist",
-  color?: number
+  color?: number,
 ) {
   return [
     {
@@ -518,7 +518,7 @@ defineEvent("interactionCreate", async (interaction) => {
     }
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -535,7 +535,7 @@ defineEvent("interactionCreate", async (interaction) => {
         return message;
       },
       interaction.user.id,
-      gameType
+      gameType,
     );
     await interaction.deferUpdate();
     const buttonMessage = interaction.message;
@@ -548,7 +548,7 @@ defineEvent("interactionCreate", async (interaction) => {
         `${interaction.user.displayName} is playing again!`,
         gameType,
         //@ts-ignore
-        buttonMessage.components[0].data.accent_color
+        buttonMessage.components[0].data.accent_color,
       ),
     });
 
@@ -576,7 +576,7 @@ defineEvent("interactionCreate", async (interaction) => {
           gameId,
 
           "Type your answer within 35 seconds to make a guess",
-          game.color
+          game.color,
         ),
       }),
       await interaction.deferUpdate(),
@@ -592,7 +592,7 @@ defineEvent("interactionCreate", async (interaction) => {
           gameId,
 
           "Type your answer within 35 seconds to make a guess",
-          game.color
+          game.color,
         ),
       }),
       await interaction.deferUpdate(),
@@ -606,7 +606,7 @@ defineEvent("interactionCreate", async (interaction) => {
         game.hints,
         `**<@${interaction.user.id}> gave up!**\nThe answer was **${game.answer}**.`,
         undefined,
-        game.mix
+        game.mix,
       ),
     });
     delete games[gameId];
@@ -637,7 +637,7 @@ defineEvent("messageCreate", async (message) => {
           game.hints,
           null,
           `**<@${message.author.id}> guessed it!**`,
-          game.color
+          game.color,
         ),
       }),
       await message.react("✅"),
@@ -647,7 +647,7 @@ defineEvent("messageCreate", async (message) => {
           message.createdTimestamp - game.startTimestamp,
           message.author.id,
           game.mix ? "mix" : game.type,
-          game.by
+          game.by,
         ),
         flags: MessageFlags.IsComponentsV2,
       }),

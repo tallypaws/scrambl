@@ -1,4 +1,4 @@
-type MusicbrainzArtistInfo = {
+export type MusicbrainzArtistInfo = {
   isnis: [];
   area: {
     name: string;

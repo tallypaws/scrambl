@@ -1,17 +1,21 @@
-import { DBMap } from "common/database";
+import { DBMap } from "../common/database.js";
 import {
   ApplicationCommandOptionType,
   ComponentType,
   MessageFlags,
 } from "discord.js";
 import { defineChatCommand, defineEvent } from "strife.js";
-import fm from "util/fm";
+import fm from "../util/fm.js";
 import z from "zod";
 
 const schema = z.object({
   lastfm: z.string(),
 });
-export const userMap = new DBMap("fmusermap", schema, null);
+export const userMap = await DBMap.create({
+  name: "fmusermap",
+  schema,
+  defaultV: null,
+});
 
 const confirmPromises: Record<string, (value: string) => void> = {};
 
@@ -29,7 +33,7 @@ defineChatCommand(
   },
   async (interaction, options) => {
     await interaction.deferReply({
-        flags: MessageFlags.Ephemeral,
+      flags: MessageFlags.Ephemeral,
     });
     try {
       await fm.user.topArtists(options.username);
@@ -161,7 +165,7 @@ defineChatCommand(
       ],
       flags: MessageFlags.IsComponentsV2,
     });
-  }
+  },
 );
 
 defineEvent("interactionCreate", (btn) => {

@@ -5,7 +5,7 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
-import { userMap } from "modules/link";
+import { userMap } from "./link.js";
 import {
   games,
   channelIdtoGameId,
@@ -18,14 +18,14 @@ import {
   componentsSimple,
   getRandomItem,
   GameType,
-} from "modules/gameShared";
+} from "./gameShared.js";
 import sharp from "sharp";
 import { defineChatCommand, defineEvent } from "strife.js";
-import { InvalidCommandUsageError } from "util/errors.js";
-import { fm } from "util/fm.js";
-import { getNextPixelSize, pixelate } from "util/images";
-import { levenshteinDistance, scramble } from "util/text";
-import { colors } from "common/constants";
+import { InvalidCommandUsageError } from "../util/errors.js";
+import { fm } from "../util/fm.js";
+import { getNextPixelSize, pixelate } from "../util/images.js";
+import { levenshteinDistance, scramble } from "../util/text.js";
+import { colors } from "../common/constants.js";
 
 defineChatCommand(
   {
@@ -40,7 +40,7 @@ defineChatCommand(
     }
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -56,9 +56,9 @@ defineChatCommand(
       },
 
       interaction.user.id,
-      "album"
+      "album",
     );
-  }
+  },
 );
 
 type payload = {
@@ -71,7 +71,7 @@ export async function startPixel(
   channel: TextBasedChannel,
   sendMessage: (payload: payload) => Promise<Message<boolean>>,
   user: string,
-  type: GameType
+  type: GameType,
 ) {
   try {
     console.time("startPixel_total");
@@ -82,7 +82,7 @@ export async function startPixel(
       //   );
       return sendMessage({
         components: componentsSimple(
-          "A pixel game is already in this channel."
+          "A pixel game is already in this channel.",
         ),
         flags: MessageFlags.IsComponentsV2,
       });
@@ -90,7 +90,7 @@ export async function startPixel(
     channelIdtoGameId[channel.id] = "-";
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
     console.timeEnd("startPixel_init");
@@ -102,7 +102,7 @@ export async function startPixel(
     if (!fmuser) {
       delete channelIdtoGameId[channel.id];
       throw new InvalidCommandUsageError(
-        "You need to link your Last.fm account first using /link."
+        "You need to link your Last.fm account first using /link.",
       );
     }
 
@@ -116,7 +116,7 @@ export async function startPixel(
       type,
       fmuser,
       user,
-      MAX_SELECT_ATTEMPTS
+      MAX_SELECT_ATTEMPTS,
     );
     answer = selection.answer;
     imageUrl = selection.imageUrl;
@@ -140,7 +140,7 @@ export async function startPixel(
     const pixelateLevel = getNextPixelSize();
     let jumbled = scramble(answer).toUpperCase();
     const gameId = `pixel-${Date.now().toString()}-${Math.floor(
-      Math.random() * 1000
+      Math.random() * 1000,
     )}`;
 
     console.time("startPixel_pixelateInitial");
@@ -153,7 +153,7 @@ export async function startPixel(
       hints,
       pixelateLevel !== 0.01,
       gameId,
-      "Type your answer within 35 seconds to make a guess"
+      "Type your answer within 35 seconds to make a guess",
     );
 
     console.time("startPixel_sendMessage");
@@ -199,7 +199,7 @@ export async function startPixel(
             null,
             `**Time's up!**\nIt was **${game.answer}**${
               game.by ? ` by ${game.by}` : ""
-            }.`
+            }.`,
           ),
           files: getFiles(imageBuffer),
         }),
@@ -256,7 +256,7 @@ function getGiveUpComponents(
   type: string,
   hints: { random: string[]; all: string[] },
   suffix?: string,
-  buttonLabel?: string
+  buttonLabel?: string,
 ) {
   return buildPixelGiveUpComponents(jumbled, type, hints, suffix, buttonLabel);
 }
@@ -283,7 +283,7 @@ defineEvent("interactionCreate", async (interaction) => {
     }
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
     await interaction.deferUpdate();
@@ -292,7 +292,7 @@ defineEvent("interactionCreate", async (interaction) => {
     await buttonMessage.edit({
       components: buildPlayAgainEditComponents(
         buttonMessage,
-        `${interaction.user.displayName} is playing again!`
+        `${interaction.user.displayName} is playing again!`,
       ),
     });
     const message = await buttonMessage.reply({
@@ -307,7 +307,7 @@ defineEvent("interactionCreate", async (interaction) => {
           return message;
         },
         interaction.user.id,
-        gameType
+        gameType,
       );
     } catch (e) {
       message.edit({
@@ -330,7 +330,7 @@ defineEvent("interactionCreate", async (interaction) => {
     }
     if (!channel.isSendable()) {
       throw new InvalidCommandUsageError(
-        "Cannot send messages in this channel."
+        "Cannot send messages in this channel.",
       );
     }
 
@@ -347,7 +347,7 @@ defineEvent("interactionCreate", async (interaction) => {
           return message;
         },
         interaction.user.id,
-        game?.type ?? "album"
+        game?.type ?? "album",
       );
     } catch (e) {
       message.edit({
@@ -360,7 +360,7 @@ defineEvent("interactionCreate", async (interaction) => {
     await buttonMessage.edit({
       components: buildPlayAgainEditComponents(
         buttonMessage,
-        `${interaction.user.displayName} is playing again!`
+        `${interaction.user.displayName} is playing again!`,
       ),
     });
 
@@ -390,7 +390,7 @@ defineEvent("interactionCreate", async (interaction) => {
           game.type,
           game.hints,
           game.pixelateLevel !== 0.01,
-          gameId
+          gameId,
         ),
         files: getFiles(await pixelate(game.imageBuffer, game.pixelateLevel)),
       }),
@@ -405,7 +405,7 @@ defineEvent("interactionCreate", async (interaction) => {
           game.type,
           game.hints,
           game.pixelateLevel !== 0.01,
-          gameId
+          gameId,
         ),
         files: getFiles(await pixelate(game.imageBuffer, game.pixelateLevel)),
       }),
@@ -418,7 +418,7 @@ defineEvent("interactionCreate", async (interaction) => {
         game.scrambled,
         game.type,
         game.hints,
-        `**<@${interaction.user.id}> gave up!**\nThe answer was **${game.answer}**.`
+        `**<@${interaction.user.id}> gave up!**\nThe answer was **${game.answer}**.`,
       ),
       files: getFiles(game.imageBuffer),
     });
@@ -450,7 +450,7 @@ defineEvent("messageCreate", async (message) => {
           game.hints,
           game.pixelateLevel !== 0.01,
           null,
-          `**<@${message.author.id}> guessed it!!!!!!!**`
+          `**<@${message.author.id}> guessed it!!!!!!!**`,
         ),
         files: getFiles(game.imageBuffer),
         flags: MessageFlags.IsComponentsV2,
@@ -462,7 +462,7 @@ defineEvent("messageCreate", async (message) => {
           message.createdTimestamp - game.startTimestamp,
           message.author.id,
           game.type,
-          game.by
+          game.by,
         ),
         flags: MessageFlags.IsComponentsV2,
       }),
@@ -489,7 +489,7 @@ async function selectAndPrepareItem(
   type: GameType,
   fmuser: any,
   user: string,
-  MAX_SELECT_ATTEMPTS: number
+  MAX_SELECT_ATTEMPTS: number,
 ) {
   if (type === "artist") {
     console.time("startPixel_topArtists");
@@ -502,8 +502,8 @@ async function selectAndPrepareItem(
         a.image &&
         a.image.find(
           (img: any) =>
-            !img["#text"].includes("2a96cbd8b46e442fc41c2b86b821562f")
-        )
+            !img["#text"].includes("2a96cbd8b46e442fc41c2b86b821562f"),
+        ),
     );
 
     const randomItem: any | undefined = await getRandomItem(type, fmuser, user);
@@ -542,15 +542,15 @@ async function selectAndPrepareItem(
         : (list as any).toptracks.track;
 
     console.time(
-      type === "album" ? "startPixel_pickAlbum" : "startPixel_pickTrack"
+      type === "album" ? "startPixel_pickAlbum" : "startPixel_pickTrack",
     );
     const candidates = arr.filter(
       (a: any) =>
         a.image &&
         a.image.find(
           (img: any) =>
-            !img["#text"].includes("2a96cbd8b46e442fc41c2b86b821562f")
-        )
+            !img["#text"].includes("2a96cbd8b46e442fc41c2b86b821562f"),
+        ),
     );
 
     let randomItem: any | undefined;
@@ -561,7 +561,7 @@ async function selectAndPrepareItem(
         0.6,
         user,
         type,
-        (it: any) => `${it.artist?.name ?? ""}::${it.name ?? it.title ?? ""}`
+        (it: any) => `${it.artist?.name ?? ""}::${it.name ?? it.title ?? ""}`,
       );
       if (!randomItem) continue;
 
@@ -585,7 +585,7 @@ async function selectAndPrepareItem(
       break;
     }
     console.timeEnd(
-      type === "album" ? "startPixel_pickAlbum" : "startPixel_pickTrack"
+      type === "album" ? "startPixel_pickAlbum" : "startPixel_pickTrack",
     );
 
     if (!randomItem) throw new Error(`Could not select a valid ${type}`);
@@ -597,12 +597,12 @@ async function selectAndPrepareItem(
         ? getAlbumHints(
             randomItem.artist.name,
             randomItem.name ?? randomItem.title,
-            +randomItem.playcount
+            +randomItem.playcount,
           )
         : getTrackHints(
             randomItem.artist.name,
             randomItem.name ?? randomItem.title,
-            +randomItem.playcount
+            +randomItem.playcount,
           );
 
     return {
@@ -623,7 +623,7 @@ function buildPixelComponents(
   hints: { random: string[]; all: string[] },
   canBeUnpixeled: boolean,
   gameId: string | null,
-  suffix?: string
+  suffix?: string,
 ) {
   return [
     {
@@ -706,7 +706,7 @@ function buildPixelGiveUpComponents(
   type: string,
   hints: { random: string[]; all: string[] },
   suffix?: string,
-  buttonLabel?: string
+  buttonLabel?: string,
 ) {
   return [
     {
@@ -764,7 +764,7 @@ function buildPixelAnswerComponents(
   timeMs: number,
   userId: string,
   gameType: GameType,
-  by: string | undefined = undefined
+  by: string | undefined = undefined,
 ) {
   return [
     {

@@ -1,8 +1,9 @@
 import { Message } from "discord.js";
-import { fm } from "util/fm.js";
-import { musicbrainz } from "util/musicbrainz";
-import { pickRandomWeighedByParam } from "util/functions";
-import { levenshteinDistance } from "util/text";
+import { fm } from "../util/fm.js";
+import { musicbrainz } from "../util/musicbrainz.js";
+import { pickRandomWeighedByParam } from "../util/functions.js";
+import { levenshteinDistance } from "../util/text.js";
+import { FmArtistInfo } from "../util/types/fm.types.js";
 
 export type GameType = "artist" | "album" | "track" | "mix";
 
@@ -17,7 +18,7 @@ export type GameBase = {
   startTimestamp: number;
   answered: boolean;
   by?: string;
-  color: number
+  color: number;
 };
 
 export type JumbleGame = GameBase;
@@ -45,7 +46,7 @@ export const recentSelections: Record<
 
 function pruneRecentFor(
   userId: string,
-  gameType: "artist" | "album" | "track"
+  gameType: "artist" | "album" | "track",
 ) {
   const now = Date.now();
   const user = recentSelections[userId];
@@ -56,7 +57,7 @@ function pruneRecentFor(
 export function recordRecentSelection(
   userId: string,
   gameType: "artist" | "album" | "track",
-  key: string
+  key: string,
 ) {
   if (!recentSelections[userId]) {
     recentSelections[userId] = { artist: [], album: [], track: [] };
@@ -67,7 +68,7 @@ export function recordRecentSelection(
 
 export function getRecentKeys(
   userId: string,
-  gameType: "artist" | "album" | "track"
+  gameType: "artist" | "album" | "track",
 ): Set<string> {
   const user = recentSelections[userId];
   if (!user) return new Set();
@@ -81,7 +82,7 @@ export function pickRandomWeighedAvoidRecent<T = any>(
   weightExp: number,
   userId?: string,
   gameType?: "artist" | "album" | "track",
-  keyFn?: (item: T) => string
+  keyFn?: (item: T) => string,
 ): T | undefined {
   if (!list || list.length === 0) return undefined;
   const identity = keyFn
@@ -105,7 +106,7 @@ export function pickRandomWeighedAvoidRecent<T = any>(
   const picked = pickRandomWeighedByParam(
     candidates as any[],
     weightParam,
-    weightExp
+    weightExp,
   );
 
   if (picked && userId && gameType) {
@@ -127,7 +128,7 @@ export function isPixelGame(g: Game): g is PixelGame {
 export function pickRandom<T>(
   arr: T[],
   count: number,
-  existing: T[] = []
+  existing: T[] = [],
 ): T[] {
   const available = arr.filter((item) => !existing.includes(item));
 
@@ -148,7 +149,7 @@ export function pickRandom<T>(
 export async function getArtistHints(
   number = 3,
   artist: FmArtistInfo["artist"],
-  plays: number
+  plays: number,
 ) {
   const mbid = artist.mbid;
   if (!mbid) return { random: [], all: [] };
@@ -164,7 +165,7 @@ export async function getArtistHints(
   if (artist.tags && artist.tags.tag.length > 0) {
     const tagNames = artist.tags.tag.map((t) => t.name);
     const filtered = tagNames.filter(
-      (t) => !t.toLowerCase().includes((artist.name ?? "").toLowerCase())
+      (t) => !t.toLowerCase().includes((artist.name ?? "").toLowerCase()),
     );
     if (filtered.length > 0) {
       hints.push(`Some of their tags are ${filtered.join(", ")}`);
@@ -186,11 +187,11 @@ export async function getArtistHints(
 }
 
 export async function getAlbumHints(
-  artist: string,
+  artistName: string,
   album: string,
-  playcount?: number
+  playcount?: number,
 ) {
-  const albumInfo = await fm.album.info(artist, album);
+  const albumInfo = await fm.album.info(artistName, album);
   const hints: string[] = [];
   if (albumInfo.album.wiki?.published) {
     const publishedDate = new Date(albumInfo.album.wiki.published);
@@ -198,18 +199,20 @@ export async function getAlbumHints(
     hints.push(`It was released **<t:${Math.floor(publishedSeconds)}:R>**`);
   }
   if (albumInfo.album.tags && albumInfo.album.tags.tag.length > 0) {
-    const tagNames = albumInfo.album.tags.tag.map((t) => t.name);
+    const tagNames = albumInfo.album.tags.tag.map((t: { name: any }) => t.name);
     const filtered = tagNames.filter(
-      (t) => !t.toLowerCase().includes((album ?? "").toLowerCase())
+      (t: string) => !t.toLowerCase().includes((album ?? "").toLowerCase()),
     );
     if (filtered.length > 0) {
       hints.push(`Some of its tags are ${filtered.join(", ")}`);
     }
   }
   if (albumInfo.album.tracks && albumInfo.album.tracks.track.length > 0) {
-    const trackNames = albumInfo.album.tracks.track.map((t) => t.name)
+    const trackNames = albumInfo.album.tracks.track.map(
+      (t: { name: any }) => t.name,
+    );
 
-    const filtered = trackNames.filter((t) => {
+    const filtered = trackNames.filter((t: string) => {
       const dist = levenshteinDistance(album.toLowerCase(), t.toLowerCase());
       const maxLen = Math.max(album.length, t.length);
       const relative = maxLen === 0 ? 0 : dist / maxLen;
@@ -223,24 +226,61 @@ export async function getAlbumHints(
   if (albumInfo.album.listeners) {
     hints.push(
       `It has ${Intl.NumberFormat("en-US").format(
-        +albumInfo.album.listeners
-      )} listeners`
+        +albumInfo.album.listeners,
+      )} listeners`,
     );
   }
   if (playcount) {
     hints.push(
-      `You have ${playcount} play${playcount !== 1 ? "s" : ""} on this album`
+      `You have ${playcount} play${playcount !== 1 ? "s" : ""} on this album`,
     );
+  }
+
+  artist: {
+    const { artist } = await fm.artist.info(artistName);
+    const mbid = artist.mbid;
+    if (!mbid) return { random: [], all: [] };
+    const mbInfo = await musicbrainz.artist.info(mbid);
+    const hints: string[] = [];
+    if (mbInfo.country) {
+      hints.push(
+        `The artist's country flag: :flag_${mbInfo.country.toLowerCase()}:`,
+      );
+    }
+    if (mbInfo.disambiguation) {
+      hints.push(`The artist be described as **${mbInfo.disambiguation}**`);
+    }
+
+    if (artist.tags && artist.tags.tag.length > 0) {
+      const tagNames = artist.tags.tag.map((t) => t.name);
+      const filtered = tagNames.filter(
+        (t) => !t.toLowerCase().includes((artist.name ?? "").toLowerCase()),
+      );
+      if (filtered.length > 0) {
+        hints.push(`Some of the artist's tags are ${filtered.join(", ")}`);
+      }
+    }
+    if (mbInfo["life-span"].begin) {
+      const yearSeconds = new Date(mbInfo["life-span"].begin).getTime() / 1000;
+      hints.push(`the artist was born **<t:${Math.floor(yearSeconds)}:R>**`);
+    }
+    if (mbInfo["life-span"].end) {
+      const endSeconds = new Date(mbInfo["life-span"].end).getTime() / 1000;
+      hints.push(`the artist passed away **<t:${Math.floor(endSeconds)}:R>**`);
+    }
+    if (mbInfo.type) {
+      hints.push(`the artist is a **${mbInfo.type}**`);
+    }
   }
   return { random: pickRandom(hints, 3), all: hints };
 }
 
 export async function getTrackHints(
-  artist: string,
+  artistName: string,
   track: string,
-  playcount?: number
+  playcount?: number,
 ) {
-  const trackInfo = await fm.track.info(artist, track);
+  const trackInfo = await fm.track.info(artistName, track);
   const hints: string[] = [];
   if (trackInfo.track.wiki?.published) {
     const publishedDate = new Date(trackInfo.track.wiki.published);
@@ -248,41 +288,83 @@ export async function getTrackHints(
     hints.push(`It was released **<t:${Math.floor(publishedSeconds)}:R>**`);
   }
 
-if (trackInfo.track.album?.title) {
+  if (trackInfo.track.album?.title) {
     const albumTitle = trackInfo.track.album.title;
     const trackTitle = track;
 
-    const dist = levenshteinDistance(albumTitle.toLowerCase(), trackTitle.toLowerCase());
+    const dist = levenshteinDistance(
+      albumTitle.toLowerCase(),
+      trackTitle.toLowerCase(),
+    );
     const maxLen = Math.max(albumTitle.length, trackTitle.length);
     const relative = maxLen === 0 ? 0 : dist / maxLen;
-    const includes = trackTitle.toLowerCase().includes(albumTitle.toLowerCase()) || albumTitle.toLowerCase().includes(trackTitle.toLowerCase());
+    const includes =
+      trackTitle.toLowerCase().includes(albumTitle.toLowerCase()) ||
+      albumTitle.toLowerCase().includes(trackTitle.toLowerCase());
     if (!(dist <= 3 || relative <= 0.25 || includes)) {
-        hints.push(`It is from the album "${albumTitle}"`);
+      hints.push(`It is from the album "${albumTitle}"`);
     }
-}
+  }
 
   if (trackInfo.track.toptags?.tag && trackInfo.track.toptags.tag.length > 0) {
-    const tagNames = trackInfo.track.toptags.tag.map((t) => t.name);
+    const tagNames = trackInfo.track.toptags.tag.map(
+      (t: { name: any }) => t.name,
+    );
     const filtered = tagNames.filter(
-      (t) => !t.toLowerCase().includes((track ?? "").toLowerCase())
+      (t: string) => !t.toLowerCase().includes((track ?? "").toLowerCase()),
     );
     if (filtered.length > 0) {
       hints.push(`Some of its tags are ${filtered.join(", ")}`);
     }
-  } 
+  }
 
-const durMs = Number(trackInfo.track.duration ?? 0);
-if (durMs > 0) {
+  const durMs = Number(trackInfo.track.duration ?? 0);
+  if (durMs > 0) {
     const durationSeconds = Math.floor(durMs / 1000);
     hints.push(`Its duration is ${secondsToHMS(durationSeconds)}`);
-}
+  }
 
   if (playcount) {
     hints.push(
-      `You have ${playcount} play${playcount !== 1 ? "s" : ""} on this track`
+      `You have ${playcount} play${playcount !== 1 ? "s" : ""} on this track`,
     );
   }
+  artist: {
+    const { artist } = await fm.artist.info(artistName);
+    const mbid = artist.mbid;
+    if (!mbid) return { random: [], all: [] };
+    const mbInfo = await musicbrainz.artist.info(mbid);
+    const hints: string[] = [];
+    if (mbInfo.country) {
+      hints.push(
+        `The artist's country flag: :flag_${mbInfo.country.toLowerCase()}:`,
+      );
+    }
+    if (mbInfo.disambiguation) {
+      hints.push(`The artist be described as **${mbInfo.disambiguation}**`);
+    }
 
+    if (artist.tags && artist.tags.tag.length > 0) {
+      const tagNames = artist.tags.tag.map((t) => t.name);
+      const filtered = tagNames.filter(
+        (t) => !t.toLowerCase().includes((artist.name ?? "").toLowerCase()),
+      );
+      if (filtered.length > 0) {
+        hints.push(`Some of the artist's tags are ${filtered.join(", ")}`);
+      }
+    }
+    if (mbInfo["life-span"].begin) {
+      const yearSeconds = new Date(mbInfo["life-span"].begin).getTime() / 1000;
+      hints.push(`the artist was born **<t:${Math.floor(yearSeconds)}:R>**`);
+    }
+    if (mbInfo["life-span"].end) {
+      const endSeconds = new Date(mbInfo["life-span"].end).getTime() / 1000;
+      hints.push(`the artist passed away **<t:${Math.floor(endSeconds)}:R>**`);
+    }
+    if (mbInfo.type) {
+      hints.push(`the artist is a **${mbInfo.type}**`);
+    }
+  }
   return { random: pickRandom(hints, 3), all: hints };
 }
 
@@ -305,14 +387,14 @@ export function componentsSimple(content: string) {
 export const getRandomItem = async (
   type: "artist" | "album" | "track",
   fmuser: any,
-  user: string
+  user: string,
 ) => {
   const list =
     type === "artist"
       ? await fm.user.topArtists(fmuser.lastfm)
       : type === "album"
-      ? await fm.user.topAlbums(fmuser.lastfm)
-      : await fm.user.topTracks(fmuser.lastfm);
+        ? await fm.user.topAlbums(fmuser.lastfm)
+        : await fm.user.topTracks(fmuser.lastfm);
 
   return pickRandomWeighedAvoidRecent(
     //@ts-ignore
@@ -320,17 +402,17 @@ export const getRandomItem = async (
       type === "artist"
         ? "topartists"
         : type === "album"
-        ? "topalbums"
-        : "toptracks"
+          ? "topalbums"
+          : "toptracks"
     ][type === "artist" ? "artist" : type === "album" ? "album" : "track"],
     "playcount",
     0.6, // funny
     user,
     type,
-    (it: any) => `${it.artist?.name ?? ""}::${it.name ?? it.title ?? ""}`
+    (it: any) => `${it.artist?.name ?? ""}::${it.name ?? it.title ?? ""}`,
   )!;
 };
-  
+
 function secondsToHMS(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);

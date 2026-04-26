@@ -1,11 +1,22 @@
 import { memoize } from "./functions.js";
+import {
+  FmAlbumInfo,
+  FmAlbumTags,
+  FmArtistInfo,
+  FmArtistTags,
+  FmTopAlbums,
+  FmTopArtists,
+  FmTopTracks,
+  FmTrackInfo,
+  FmTrackTags,
+} from "./types/fm.types.js";
 
 const apiBase = "http://ws.audioscrobbler.com/2.0/";
 const apiKey = process.env.LASTFM_API_KEY;
 
 async function fmRequest(
   method: string,
-  params: Record<string, string>
+  params: Record<string, string>,
 ): Promise<any> {
   const url = new URL(apiBase);
   url.searchParams.append("method", method);
@@ -17,14 +28,14 @@ async function fmRequest(
 
   const response = await fetch(url.toString());
   if (!response.ok) {
-    throw response
+    throw response;
   }
   return response.json();
 }
 
 async function fetchTopAlbumsForUser(
   username: string,
-  limit = 500
+  limit = 500,
 ): Promise<FmTopAlbums> {
   const data = await fmRequest("user.gettopalbums", {
     user: username,
@@ -35,7 +46,7 @@ async function fetchTopAlbumsForUser(
 
 async function fetchTopTracksForUser(
   username: string,
-  limit = 500
+  limit = 500,
 ): Promise<FmTopTracks> {
   const data = await fmRequest("user.gettoptracks", {
     user: username,
@@ -46,7 +57,7 @@ async function fetchTopTracksForUser(
 
 async function fetchTopArtistsForUser(
   username: string,
-  limit = 500
+  limit = 500,
 ): Promise<FmTopArtists> {
   const data = await fmRequest("user.gettopartists", {
     user: username,
@@ -55,7 +66,10 @@ async function fetchTopArtistsForUser(
   return data;
 }
 
-async function fetchTrackInfo(artist: string, track: string): Promise<FmTrackInfo> {
+async function fetchTrackInfo(
+  artist: string,
+  track: string,
+): Promise<FmTrackInfo> {
   const data = await fmRequest("track.getInfo", {
     artist,
     track,
@@ -63,7 +77,10 @@ async function fetchTrackInfo(artist: string, track: string): Promise<FmTrackInf
   return data;
 }
 
-async function fetchTrackTags(artist: string, track: string): Promise<FmTrackTags> {
+async function fetchTrackTags(
+  artist: string,
+  track: string,
+): Promise<FmTrackTags> {
   const data = await fmRequest("track.getTopTags", {
     artist,
     track,
@@ -71,7 +88,10 @@ async function fetchTrackTags(artist: string, track: string): Promise<FmTrackTag
   return data;
 }
 
-async function fetchAlbumInfo(artist: string, album: string): Promise<FmAlbumInfo> {
+async function fetchAlbumInfo(
+  artist: string,
+  album: string,
+): Promise<FmAlbumInfo> {
   const data = await fmRequest("album.getInfo", {
     artist,
     album,
@@ -79,7 +99,10 @@ async function fetchAlbumInfo(artist: string, album: string): Promise<FmAlbumInf
   return data;
 }
 
-async function fetchAlbumTags(artist: string, album: string): Promise<FmAlbumTags> {
+async function fetchAlbumTags(
+  artist: string,
+  album: string,
+): Promise<FmAlbumTags> {
   const data = await fmRequest("album.getTopTags", {
     artist,
     album,
@@ -107,18 +130,18 @@ const fm = {
     topArtists: memoize(fetchTopArtistsForUser),
     topAlbums: memoize(fetchTopAlbumsForUser),
   },
-    track: {
-      info: memoize(fetchTrackInfo),
-      tags: memoize(fetchTrackTags),
-    },
-    album: {
-      info: memoize(fetchAlbumInfo),
-      tags: memoize(fetchAlbumTags),
-    },
-    artist: {
-      info: memoize(fetchArtistInfo),
-      tags: memoize(fetchArtistTags),
-    },
+  track: {
+    info: memoize(fetchTrackInfo),
+    tags: memoize(fetchTrackTags),
+  },
+  album: {
+    info: memoize(fetchAlbumInfo),
+    tags: memoize(fetchAlbumTags),
+  },
+  artist: {
+    info: memoize(fetchArtistInfo),
+    tags: memoize(fetchArtistTags),
+  },
 };
 
 export default fm;
