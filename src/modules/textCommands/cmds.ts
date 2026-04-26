@@ -74,7 +74,7 @@ export const commands: CommandDef[] = [
           "Invalid prefix. Prefix length must be at most 32. (why the heck are you doing this)",
         );
       }
-      if (!/^[a-zA-Z0-9\.-_;:[]{}-=_+]+$/.test(prefix)) {
+      if (!/^[a-zA-Z0-9\.-_;:\[\]{}\-=_\+]+$/.test(prefix)) {
         throw new InvalidCommandUsageError(
           "Invalid prefix. Prefix must only contain alphanumeric characters and `.-_;:[]{}-=_+`.",
         );
