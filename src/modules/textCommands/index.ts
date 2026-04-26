@@ -34,7 +34,6 @@ for (const cmd of commands) {
     }
   }
 }
-
 defineEvent("messageCreate", async (message) => {
   if (message.author.bot) return;
 
@@ -43,16 +42,24 @@ defineEvent("messageCreate", async (message) => {
     ? await guildPrefixMap.get(message.guild.id)
     : DefaultPrefix;
 
-  if (!(raw.startsWith(prefix) || raw.startsWith(`<@${client.user.id}>`)))
-    return;
+  const botMention = `<@${client.user.id}>`;
+
+  if (!(raw.startsWith(prefix) || raw.startsWith(botMention))) return;
 
   let withoutPrefix: string;
-  if (raw.startsWith(`<@${client.user.id}>`)) {
-    withoutPrefix = raw.slice(`<@${client.user.id}>`.length);
+  if (raw.startsWith(botMention)) {
+    withoutPrefix = raw.slice(botMention.length);
   } else {
     withoutPrefix = raw.slice(prefix.length);
   }
   withoutPrefix = withoutPrefix.trimStart();
+
+  if (raw.startsWith(botMention) && withoutPrefix.length === 0) {
+    return message.reply({
+      content: `This server's prefix is \`${prefix}\``,
+    });
+  }
+
   const parts = withoutPrefix.split(/\s+/);
   const cmdName = parts.shift()?.toLowerCase();
   const args = parts;
