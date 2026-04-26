@@ -1,4 +1,5 @@
 import { memoize } from "./functions.js";
+import { MusicbrainzArtistInfo } from "./types/musicbrainz.types.js";
 
 const base = "https://musicbrainz.org/ws/2/";
 async function musicbrainzRequest<R = any>(
