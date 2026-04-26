@@ -48,8 +48,8 @@ async function connectSurrealDB({
 }
 
 await connectSurrealDB({
-  namespace: "plrx",
-  database: "plrx",
+  namespace: "scrambl",
+  database: "prod",
   username: "root",
   password: "root",
   url: process.env.SURREAL_URI ?? "ws://192.168.0.7:8000/rpc",
